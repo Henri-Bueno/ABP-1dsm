@@ -1,22 +1,21 @@
 const pool = require("../database/db");
 const { randomBytes } = require("crypto")
+const { hashPassword } = require("../utils/password")
 
 async function insertUsuario(client, nome, email, cpf, senha) {
     const certificado_hash = randomBytes(24).toString("hex")
-    try {
-        const result = await client.query(
-            `INSERT INTO usuarios (nome, email, cpf, senha, certificado_hash)
+    const senhaCodificada = hashPassword(senha)
+
+    const result = await client.query(
+        `INSERT INTO usuarios (nome, email, cpf, senha, certificado_hash)
         VALUES ($1, $2,$3, $4, $5)
         RETURNING id_usuario, nome, email, cpf, certificado_hash`,
-            [nome, email, cpf, senha, certificado_hash]
-        )
-        if (result && result.rowCount == 1) {
-            return result.rows[0];
-        }
-        return null
-    } catch (e) {
-        return null
+        [nome, email, cpf, senhaCodificada, certificado_hash]
+    )
+    if (result && result.rowCount == 1) {
+        return result.rows[0];
     }
+    return result.rows[0] || null
 }
 
 async function findPrimeiroModuloid(client) {
@@ -25,7 +24,7 @@ async function findPrimeiroModuloid(client) {
     if (result && result.rows.length == 1) {
         return result.rows[0]
     }
-    return null
+    return result.rows[0] || null
 }
 
 async function findGrupoAleatorio(client, idModulo) {
@@ -38,68 +37,102 @@ async function findGrupoAleatorio(client, idModulo) {
         LIMIT 1`,
         [idModulo]
     )
-    if (result && result.rows.length == 1) {
-        return result.rows[0]
-    }
-    return null
+    return result.rows[0] || null
 }
 
 async function insertExame(client, idModulo, idUsuario, grupo, tentativa) {
-    try {
-        const result = await client.query(
-            `INSERT INTO exames (id_modulo, id_usuario, grupo, tentativa)
+    const result = await client.query(
+        `INSERT INTO exames (id_modulo, id_usuario, grupo, tentativa)
         VALUES ($1, $2,$3, $4)
         RETURNING id_exame`,
-            [idModulo, idUsuario, grupo, tentativa]
-        )
-        if (result && result.rowCount == 1) {
-            return result.rows[0];
-        }
-        return null
-    } catch (e) {
-        return null
-    }
+        [idModulo, idUsuario, grupo, tentativa]
+    )
 }
 
 async function createUsuario(nome, email, cpf, senha) {
     const client = await pool.connect()
-    await client.query("BEGIN")
+    try {
+        await client.query("BEGIN")
 
-    const usuario = await insertUsuario(client, nome, email, cpf, senha)
-    if (!usuario) {
+        const usuario = await insertUsuario(client, nome, email, cpf, senha)
+
+        const modulo = await findPrimeiroModuloid(client)
+        if (!modulo) {
+            throw new error("Nenhum módulo cadastrado para inicializar exame do usuário")
+        }
+        const grupo = await findGrupoAleatorio(client, modulo.id_modulo)
+        if (!grupo) {
+            throw new error("Nenhum grupo cadastrado para inicializar exame do usuário")
+        }
+
+        await insertExame(
+            client,
+            modulo.id_modulo,
+            usuario.id_usuario,
+            grupo.grupo,
+            1)
+
+        await client.query("COMMIT")
+
+        return { id_usuario: usuario.id_usuario, nome: usuario.nome, email: usuario.email, cpf: usuario.cpf }
+    } catch (e) {
         client.query("ROLLBACK")
-        return { error: "Problemas ao criar usuário" }
+        throw e;
+    } finally {
+        client.release()
     }
-    const modulo = await findPrimeiroModuloid(client)
-    if (!modulo) {
-        client.query("ROLLBACK")
-        return { error: "Problemas ao obter módulo" }
-    }
-    const grupo = await findGrupoAleatorio(client, modulo.id_modulo)
-    if (!grupo) {
-        client.query("ROLLBACK")
-        return { error: "Problemas ao obter grupo de questões" }
-    }
+}
 
-    const exame = await insertExame(
-        client,
-        modulo.id_modulo,
-        usuario.id_usuario,
-        grupo.grupo,
-        1)
-    if (!exame) {
-        client.query("ROLLBACK")
-        return { error: "Problemas ao criar o exame" }
-    }
+async function updateUsuarioCpf(idUsuario, cpf) {
+    const result = await pool.query(`
+        UPDATE usuarios
+        SET cpf = $1
+        WHERE id_usuario = $2
+        RETURNING id_usuario`,
+        [cpf, idUsuario]
+    ) 
 
-    console.log("R:", usuario.id_usuario, modulo.id_modulo, grupo.grupo,)
+    return result.rows[0] || null
+}
 
-    await client.query("COMMIT")
-    client.release()
+async function updateUsuarioNome(idUsuario, nome) {
+    const result = await pool.query(`
+        UPDATE usuarios
+        SET nome = $1
+        WHERE id_usuario = $2
+        RETURNING id_usuario`,
+        [nome, idUsuario]
+    ) 
 
-    return { message: "Usuário criado com sucesso" }
+    return result.rows[0] || null
+}
+
+async function updateUsuarioEmail(idUsuario, email) {
+    const result = await pool.query(`
+        UPDATE usuarios
+        SET email = $1
+        WHERE id_usuario = $2
+        RETURNING id_usuario`,
+        [email, idUsuario]
+    ) 
+
+    return result.rows[0] || null
+}
+
+async function findUsuarioById(idUsuario) {
+    const result = await pool.query(`
+        SELECT id_usuario, nome, email, cpf
+        FROM usuarios
+        WHERE id_usuario = $1`,
+        [idUsuario]
+    )
+    return result.rows[0] || null
 }
 
 module.exports = {
-    createUsuario
+    createUsuario,
+    updateUsuarioCpf,
+    updateUsuarioNome,
+    updateUsuarioEmail,
+    findUsuarioById
 }
