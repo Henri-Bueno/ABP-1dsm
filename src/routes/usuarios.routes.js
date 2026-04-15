@@ -3,10 +3,13 @@ const {
     createUsuario, 
     updateUsuarioCpf, 
     updateUsuarioNome, 
-    updateUsuarioEmail, 
+    updateUsuarioEmail,
+    updateUsuarioSenha,
     findUsuarioById
     } 
     = require("../repositories/usuarios.repositories");
+
+const authmiddleware = require("../middlewares/auth.middleware")
 
 const router = Router()
 
@@ -46,9 +49,10 @@ router.post("/", async function (req, res) {
 /* PATCH CPF USUÁRIO
 curl -X PATCH http://localhost:3000/api/usuarios/29/cpf \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2Mjc3MTg1LCJleHAiOjE3NzYyNzc3ODV9.D4kYrNfIPp6HQ_oAwzNokIC-S2T02RnYOCdZ-UegSq4" \
   -d '{"cpf":"11122233344"}'
 */
-router.patch("/:idusuario/cpf", async function (req, res) {
+router.patch("/:idusuario/cpf", authmiddleware, async function (req, res) {
     const idUsuario = getIdUsuario(req.params)
 
     if (!idUsuario) {
@@ -82,9 +86,10 @@ router.patch("/:idusuario/cpf", async function (req, res) {
 /* PATCH NOME USUÁRIO
 curl -X PATCH http://localhost:3000/api/usuarios/3/nome \
   -H "Content-Type: application/json" \
-  -d '{"nome":"Maria"}'
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2Mjc3MTg1LCJleHAiOjE3NzYyNzc3ODV9.D4kYrNfIPp6HQ_oAwzNokIC-S2T02RnYOCdZ-UegSq4" \
+  -d '{"nome":"Mary"}'
 */
-router.patch("/:idusuario/nome", async function (req, res) {
+router.patch("/:idusuario/nome", authmiddleware, async function (req, res) {
     const idUsuario = getIdUsuario(req.params)
 
     if (!idUsuario) {
@@ -104,11 +109,6 @@ router.patch("/:idusuario/nome", async function (req, res) {
             const usuario = await findUsuarioById(result.id_usuario)
             return res.status(200).json(usuario)
         }catch(e){
-        if(e && e.code == "23505"){
-            return res.status(409).json({
-                message: "já existe usuario com o nome informado"
-            })
-        }
         return res.status(409).json({
                 message: "Problemas internos no servidor"
             })
@@ -118,9 +118,10 @@ router.patch("/:idusuario/nome", async function (req, res) {
 /* PATCH EMAIL USUÁRIO
 curl -X PATCH http://localhost:3000/api/usuarios/3/email \
   -H "Content-Type: application/json" \
+   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2Mjc3MTg1LCJleHAiOjE3NzYyNzc3ODV9.D4kYrNfIPp6HQ_oAwzNokIC-S2T02RnYOCdZ-UegSq4" \
   -d '{"email":"maria@teste.com"}'
 */
-router.patch("/:idusuario/email", async function (req, res) {
+router.patch("/:idusuario/email", authmiddleware, async function (req, res) {
     const idUsuario = getIdUsuario(req.params)
 
     if (!idUsuario) {
@@ -145,6 +146,43 @@ router.patch("/:idusuario/email", async function (req, res) {
                 message: "já existe usuario com o email informado"
             })
         }
+        return res.status(409).json({
+                message: "Problemas internos no servidor"
+            })
+    }
+})
+
+/* PATCH SENHA USUÁRIO
+curl -X PATCH http://localhost:3000/api/usuarios/3/senha \
+  -H "Content-Type: application/json" \
+   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2Mjc3MTg1LCJleHAiOjE3NzYyNzc3ODV9.D4kYrNfIPp6HQ_oAwzNokIC-S2T02RnYOCdZ-UegSq4" \
+  -d '{"senha":"123456"}'
+*/
+router.patch("/:idusuario/senha", authmiddleware, async function (req, res) {
+    const idUsuario = getIdUsuario(req.params)
+
+    if (!idUsuario) {
+        return res.status(400).json({ message: "id_usuario inválido"})
+    }
+
+        const { senha } = req.body
+        if (!senha) {
+            return res.status(400).json({ message: "senha é obrigatória" })
+        }
+        if (senha.trim().length < 6) {
+        return res 
+            .status(400)
+            .json({message: "A senha deve ter pelo menos 6 caracteres"})
+    }
+
+        try {
+            const result = await updateUsuarioSenha(idUsuario, senha)
+            if (!result) {
+                return res.status(404).json({ message: "Usuário não encontrado" })
+            }
+            const usuario = await findUsuarioById(result.id_usuario)
+            return res.status(200).json(usuario)
+        }catch(e){
         return res.status(409).json({
                 message: "Problemas internos no servidor"
             })

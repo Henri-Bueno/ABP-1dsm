@@ -1,6 +1,6 @@
 const pool = require("../database/db");
 const { randomBytes } = require("crypto")
-const { hashPassword } = require("../utils/password")
+const { hashPassword, verifyPassword } = require("../utils/password")
 
 async function insertUsuario(client, nome, email, cpf, senha) {
     const certificado_hash = randomBytes(24).toString("hex")
@@ -119,6 +119,19 @@ async function updateUsuarioEmail(idUsuario, email) {
     return result.rows[0] || null
 }
 
+async function updateUsuarioSenha(idUsuario, senha) {
+    const senhaCodificada = hashPassword(senha)
+    const result = await pool.query(`
+        UPDATE usuarios
+        SET senha = $1
+        WHERE id_usuario = $2
+        RETURNING id_usuario`,
+        [senhaCodificada, idUsuario]
+    ) 
+
+    return result.rows[0] || null
+}
+
 async function findUsuarioById(idUsuario) {
     const result = await pool.query(`
         SELECT id_usuario, nome, email, cpf
@@ -129,10 +142,36 @@ async function findUsuarioById(idUsuario) {
     return result.rows[0] || null
 }
 
+async function findUsuarioByCpfAndSenha(cpf, senha) {
+    const result = await pool.query(`
+        SELECT id_usuario, nome, email, cpf,senha
+        FROM usuarios
+        WHERE cpf = $1`,
+        [cpf]
+    )
+    usuario = result.rows[0]
+    if ( !result.rows[0]){
+        throw new Error("Usuário não encontrado")
+    }
+    const senhaValida = verifyPassword(senha, usuario.senha)
+    if (!senhaValida) {
+        throw new Error("Senha inválida")
+    }
+    return { 
+        id_usuario: usuario.id_usuario, 
+        nome: usuario.nome, 
+        email: usuario.email, 
+        cpf: usuario.cpf 
+    }
+
+}
+
 module.exports = {
     createUsuario,
     updateUsuarioCpf,
     updateUsuarioNome,
     updateUsuarioEmail,
-    findUsuarioById
+    updateUsuarioSenha,
+    findUsuarioById,
+    findUsuarioByCpfAndSenha
 }
