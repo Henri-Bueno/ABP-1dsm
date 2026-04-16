@@ -50,7 +50,7 @@ router.post("/", async function (req, res) {
 /* PATCH CPF USUÁRIO
 curl -X PATCH http://localhost:3000/api/usuarios/cpf \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2MzEzOTU3LCJleHAiOjE3NzYzMTc1NTd9.p-qMTeCNtC1kX7jvJ4YvKgHEalqILrZGFsAMAYhYa8k" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjozLCJpYXQiOjE3NzYzNzc3NzQsImV4cCI6MTc3NjM4MTM3NH0.s1RbqG4nhFLQGEFG-vov-EWqDT0ZZFhfkggxl0wqzfU" \
   -d '{"cpf":"11122233344"}'
 */
 router.patch("/cpf", authmiddleware, async function (req, res) {
@@ -83,7 +83,7 @@ router.patch("/cpf", authmiddleware, async function (req, res) {
 /* PATCH NOME USUÁRIO
 curl -X PATCH http://localhost:3000/api/usuarios/nome \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2MzEzOTU3LCJleHAiOjE3NzYzMTc1NTd9.p-qMTeCNtC1kX7jvJ4YvKgHEalqILrZGFsAMAYhYa8k" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjozLCJpYXQiOjE3NzYzNzc3NzQsImV4cCI6MTc3NjM4MTM3NH0.s1RbqG4nhFLQGEFG-vov-EWqDT0ZZFhfkggxl0wqzfU" \
   -d '{"nome":"lala"}'
 */
 router.patch("/nome", authmiddleware, async function (req, res) {
@@ -111,7 +111,7 @@ router.patch("/nome", authmiddleware, async function (req, res) {
 /* PATCH EMAIL USUÁRIO
 curl -X PATCH http://localhost:3000/api/usuarios/email \
   -H "Content-Type: application/json" \
-   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2MzEzOTU3LCJleHAiOjE3NzYzMTc1NTd9.p-qMTeCNtC1kX7jvJ4YvKgHEalqILrZGFsAMAYhYa8k" \
+   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjozLCJpYXQiOjE3NzYzNzc3NzQsImV4cCI6MTc3NjM4MTM3NH0.s1RbqG4nhFLQGEFG-vov-EWqDT0ZZFhfkggxl0wqzfU" \
   -d '{"email":"lala@teste.com"}'
 */
 router.patch("/email", authmiddleware, async function (req, res) {
@@ -144,7 +144,7 @@ router.patch("/email", authmiddleware, async function (req, res) {
 /* PATCH SENHA USUÁRIO
 curl -X PATCH http://localhost:3000/api/usuarios/senha \
   -H "Content-Type: application/json" \
-   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2MzEzOTU3LCJleHAiOjE3NzYzMTc1NTd9.p-qMTeCNtC1kX7jvJ4YvKgHEalqILrZGFsAMAYhYa8k" \
+   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjozLCJpYXQiOjE3NzYzNzc3NzQsImV4cCI6MTc3NjM4MTM3NH0.s1RbqG4nhFLQGEFG-vov-EWqDT0ZZFhfkggxl0wqzfU" \
   -d '{"senha":"123456"}'
 */
 router.patch("/senha", authmiddleware, async function (req, res) {
@@ -176,7 +176,7 @@ router.patch("/senha", authmiddleware, async function (req, res) {
 
 /* GET PRÓXIMA QUESTÃO PENDENTE DO USUÁRIO  
 curl -X GET http://localhost:3000/api/usuarios/proxima-questao \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoyOSwiaWF0IjoxNzc2MzEzOTU3LCJleHAiOjE3NzYzMTc1NTd9.p-qMTeCNtC1kX7jvJ4YvKgHEalqILrZGFsAMAYhYa8k"
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjozLCJpYXQiOjE3NzYzNzc3NzQsImV4cCI6MTc3NjM4MTM3NH0.s1RbqG4nhFLQGEFG-vov-EWqDT0ZZFhfkggxl0wqzfU"
 */
 router.get("/proxima-questao", authmiddleware, async function (req, res) {
     try {

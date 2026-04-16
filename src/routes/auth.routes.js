@@ -7,7 +7,7 @@ const router = Router()
 /* POST LOGIN USUÁRIO
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"cpf":"11122233344", "senha":"123456"}'
+  -d '{"cpf":"12345678901", "senha":"123456"}'
 */
 
 router.post("/login", async function (req, res) {
