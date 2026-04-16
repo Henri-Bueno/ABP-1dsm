@@ -90,7 +90,7 @@ async function updateUsuarioCpf(idUsuario, cpf) {
         WHERE id_usuario = $2
         RETURNING id_usuario`,
         [cpf, idUsuario]
-    ) 
+    )
 
     return result.rows[0] || null
 }
@@ -102,7 +102,7 @@ async function updateUsuarioNome(idUsuario, nome) {
         WHERE id_usuario = $2
         RETURNING id_usuario`,
         [nome, idUsuario]
-    ) 
+    )
 
     return result.rows[0] || null
 }
@@ -114,7 +114,7 @@ async function updateUsuarioEmail(idUsuario, email) {
         WHERE id_usuario = $2
         RETURNING id_usuario`,
         [email, idUsuario]
-    ) 
+    )
 
     return result.rows[0] || null
 }
@@ -127,7 +127,7 @@ async function updateUsuarioSenha(idUsuario, senha) {
         WHERE id_usuario = $2
         RETURNING id_usuario`,
         [senhaCodificada, idUsuario]
-    ) 
+    )
 
     return result.rows[0] || null
 }
@@ -150,20 +150,60 @@ async function findUsuarioByCpfAndSenha(cpf, senha) {
         [cpf]
     )
     usuario = result.rows[0]
-    if ( !result.rows[0]){
+    if (!result.rows[0]) {
         throw new Error("Usuário não encontrado")
     }
     const senhaValida = verifyPassword(senha, usuario.senha)
     if (!senhaValida) {
         throw new Error("Senha inválida")
     }
-    return { 
-        id_usuario: usuario.id_usuario, 
-        nome: usuario.nome, 
-        email: usuario.email, 
-        cpf: usuario.cpf 
+    return {
+        id_usuario: usuario.id_usuario,
+        nome: usuario.nome,
+        email: usuario.email,
+        cpf: usuario.cpf
     }
 
+}
+
+async function findProximaQuestaoByUsuario(idUsuario) {
+    const result = await pool.query(
+        ` 
+ WITH exame_atual AS ( 
+SELECT id_exame, id_modulo, grupo 
+FROM exames 
+WHERE id_usuario = $1 
+ORDER BY id_exame DESC 
+LIMIT 1 
+) 
+SELECT 
+e.id_exame, 
+q.id_questao, 
+q.id_modulo, 
+q.grupo, 
+q.numero, 
+q.dificuldade, 
+q.enunciado, 
+q.alternativa_a, 
+q.alternativa_b, 
+q.alternativa_c, 
+q.alternativa_d, 
+q.imagem 
+FROM exame_atual e 
+INNER JOIN questoes q 
+ON q.id_modulo = e.id_modulo 
+AND q.grupo IS NOT DISTINCT FROM e.grupo 
+WHERE NOT EXISTS ( 
+SELECT 1 
+FROM respostas r 
+WHERE r.id_exame = e.id_exame 
+AND r.id_questao = q.id_questao 
+) 
+ORDER BY q.numero ASC NULLS LAST, q.id_questao ASC 
+LIMIT 1`,
+        [idUsuario],
+    );
+    return result.rows[0] || null;
 }
 
 module.exports = {
@@ -173,5 +213,6 @@ module.exports = {
     updateUsuarioEmail,
     updateUsuarioSenha,
     findUsuarioById,
-    findUsuarioByCpfAndSenha
+    findUsuarioByCpfAndSenha,
+    findProximaQuestaoByUsuario
 }

@@ -1,4 +1,5 @@
 const {verifyToken} = require("../utils/jwt")
+const {findUsuarioById} = require("../repositories/usuarios.repositories")
 
 async function authmiddleware(req, res, next){
     const authorization = req.headers.authorization
@@ -12,9 +13,19 @@ async function authmiddleware(req, res, next){
     if (type !== "Bearer" || !token) {
         return res.status(401).json({ message: "Token inválido" })
     }
+    try {
+        const payload = verifyToken(token)
 
-    return res.json({token})
-    next()
+        const usuario = await findUsuarioById(payload.id_usuario)
+        if (!usuario) {
+            return res.status(401).json({ message: "Usuário não encontrado" })
+        }
+
+        req.usuario = usuario
+        return next()
+    } catch{
+        return res.status(401).json({ message: "Token inválido ou expirado" })
+    }
 }
 
 module.exports = authmiddleware;
